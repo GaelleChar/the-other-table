@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The Other Table</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Unbounded:wght@400;700;900&family=Azeret+Mono:wght@300;400&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --paper: #f0ece2;
+      --paper-dark: #e3ddd0;
+      --ink: #1a1814;
+      --ink-mid: #3d3a34;
+      --ink-soft: #8c8679;
+      --red: #d63c2f;
+      --blue: #2b4ecf;
+      --blue-pale: #dce3f8;
+      --green: #2d6a4f;
+      --border: 2.5px solid var(--ink);
+      --mono: 'Space Mono', monospace;
+      --display: 'Unbounded', sans-serif;
+      --label: 'Azeret Mono', monospace;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--paper);
+      color: var(--ink);
+      font-family: var(--mono);
+      font-size: 14px;
+      line-height: 1.6;
+      cursor: crosshair;
+    }
+
+    /* ── GRID LINES (Are.na DNA) ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(var(--paper-dark) 1px, transparent 1px),
+        linear-gradient(90deg, var(--paper-dark) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.5;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 50;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.9rem 1.5rem;
+      background: var(--paper);
+      border-bottom: var(--border);
+    }
+    .nav-logo { font-family: var(--display); font-size: 0.7rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; }
+    .nav-tag { font-family: var(--label); font-size: 0.6rem; letter-spacing: 0.15em; color: var(--ink-soft); text-transform: uppercase; }
+
+    main { position: relative; z-index: 1; padding-top: 3.5rem; }
+
+    /* ── PAGES ── */
+    .page { display: none; }
+    .page.active { display: block; }
+
+    /* ══════════════════════════════════════
+       LANDING — HERO (exact v2)
+    ══════════════════════════════════════ */
+    .hero {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      min-height: calc(100vh - 3.5rem);
+      border-bottom: var(--border);
+    }
+    .hero-left {
+      border-right: var(--border);
+      padding: 3rem 2.5rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .hero-right {
+      padding: 3rem 2.5rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      background: var(--ink);
+      position: relative;
+      overflow: hidden;
+    }
+    .hero-right::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
+      background-size: 20px 20px;
+    }
+    .tag-row { display: flex; gap: 0.5rem; flex-wrap: wrap; opacity: 0; animation: pop 0.4s ease forwards 0.1s; }
+    .tag { font-family: var(--label); font-size: 0.6rem; letter-spacing: 0.12em; text-transform: uppercase; padding: 0.3rem 0.7rem; border: 2px solid var(--ink); background: transparent; }
+    .tag.red { border-color: var(--red); color: var(--red); }
+    .tag.blue { border-color: var(--blue); color: var(--blue); }
+    .hero-title { font-family: var(--display); font-size: clamp(2.8rem, 6vw, 5.5rem); font-weight: 900; line-height: 0.95; letter-spacing: -0.03em; text-transform: uppercase; margin-top: 2rem; opacity: 0; animation: pop 0.5s ease forwards 0.25s; }
+    .hero-title .line-red { color: var(--red); display: block; }
+    .hero-title .line-blue { color: var(--blue); display: block; }
+    .hero-desc { margin-top: auto; padding-top: 3rem; font-size: 0.8rem; line-height: 1.8; color: var(--ink-mid); max-width: 38ch; opacity: 0; animation: pop 0.5s ease forwards 0.5s; }
+    .seat-counter { position: relative; z-index: 1; margin-bottom: auto; padding-top: 2rem; opacity: 0; animation: pop 0.5s ease forwards 0.35s; }
+    .seat-num { font-family: var(--display); font-size: clamp(5rem, 14vw, 12rem); font-weight: 900; color: var(--paper); line-height: 1; letter-spacing: -0.05em; display: block; }
+    .seat-label { font-family: var(--label); font-size: 0.6rem; letter-spacing: 0.25em; color: var(--ink-soft); text-transform: uppercase; margin-top: 0.5rem; }
+    .hero-cta { position: relative; z-index: 1; opacity: 0; animation: pop 0.5s ease forwards 0.65s; }
+    .btn { display: inline-flex; align-items: center; gap: 0.75rem; font-family: var(--display); font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; padding: 1rem 2rem; border: 3px solid var(--paper); color: var(--paper); background: transparent; cursor: crosshair; text-decoration: none; transition: background 0.15s, color 0.15s; }
+    .btn:hover { background: var(--paper); color: var(--ink); }
+    .btn .arrow { font-size: 1rem; }
+
+    /* ── ARE.NA GRID SECTION (exact v2) ── */
+    .grid-section { display: grid; grid-template-columns: 200px 1fr; border-bottom: var(--border); min-height: 60vh; }
+    .grid-sidebar { border-right: var(--border); padding: 2rem 1.5rem; }
+    .sidebar-label { font-family: var(--label); font-size: 0.6rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--ink-soft); margin-bottom: 1.5rem; }
+    .sidebar-items { display: flex; flex-direction: column; gap: 0.1rem; }
+    .sidebar-item { font-family: var(--mono); font-size: 0.72rem; padding: 0.5rem 0.75rem; border: 2px solid transparent; cursor: crosshair; transition: border-color 0.15s, background 0.15s; color: var(--ink-mid); }
+    .sidebar-item:hover, .sidebar-item.active { border-color: var(--ink); background: var(--paper-dark); color: var(--ink); }
+    .sidebar-item.active { font-weight: 700; }
+    .grid-content { padding: 2rem 2.5rem; }
+    .grid-content-label { font-family: var(--label); font-size: 0.6rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--ink-soft); margin-bottom: 2rem; display: flex; justify-content: space-between; }
+    .blocks-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; }
+    .block { border: var(--border); padding: 1.75rem 1.5rem; background: var(--paper); transition: background 0.15s, transform 0.15s; cursor: crosshair; }
+    .block:hover { background: var(--paper-dark); transform: translate(-2px, -2px); box-shadow: 4px 4px 0 var(--ink); }
+    .block-index { font-family: var(--label); font-size: 0.55rem; letter-spacing: 0.2em; color: var(--ink-soft); margin-bottom: 1rem; }
+    .block-title { font-family: var(--display); font-size: 1.1rem; font-weight: 700; line-height: 1.2; margin-bottom: 0.75rem; }
+    .block-body { font-size: 0.72rem; color: var(--ink-mid); line-height: 1.75; }
+    .block.accent-red { border-color: var(--red); } .block.accent-red .block-index { color: var(--red); }
+    .block.accent-blue { border-color: var(--blue); } .block.accent-blue .block-index { color: var(--blue); }
+
+    /* ── MYSTERY STRIP (exact v2) ── */
+    .mystery-strip { border-bottom: var(--border); padding: 1.5rem 2.5rem; background: var(--ink); display: flex; align-items: center; overflow: hidden; position: relative; }
+    .mystery-strip-inner { display: flex; gap: 4rem; white-space: nowrap; }
+    .mystery-text { font-family: var(--display); font-size: clamp(1rem, 3vw, 2rem); font-weight: 900; color: var(--paper); text-transform: uppercase; letter-spacing: -0.02em; white-space: nowrap; animation: marquee 18s linear infinite; }
+    .mystery-dot { color: var(--red); margin: 0 1rem; }
+    @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+
+    /* ── FORM SECTION (exact v2) ── */
+    .form-section { display: grid; grid-template-columns: 1fr 1fr; border-bottom: var(--border); }
+    .form-left { border-right: var(--border); padding: 3rem 2.5rem; display: flex; flex-direction: column; gap: 2rem; }
+    .form-right { padding: 3rem 2.5rem; background: var(--blue-pale); overflow-y: auto; }
+    .form-heading { font-family: var(--display); font-size: clamp(1.8rem, 3.5vw, 3rem); font-weight: 900; line-height: 1.0; text-transform: uppercase; letter-spacing: -0.02em; }
+    .form-subtext { font-size: 0.75rem; color: var(--ink-mid); line-height: 1.8; max-width: 38ch; }
+    .form-rules { display: flex; flex-direction: column; gap: 0.5rem; }
+    .rule { font-family: var(--label); font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-soft); display: flex; align-items: center; gap: 0.5rem; }
+    .rule::before { content: '–'; color: var(--red); font-weight: 700; }
+
+    .field { margin-bottom: 1.75rem; }
+    label { display: block; font-family: var(--label); font-size: 0.58rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--ink-soft); margin-bottom: 0.5rem; }
+    .field-q { font-family: var(--mono); font-size: 0.78rem; color: var(--ink); margin-bottom: 0.5rem; line-height: 1.5; font-style: italic; }
+    input[type="text"], input[type="number"], input[type="email"], textarea {
+      width: 100%; background: var(--paper); border: 2.5px solid var(--ink); color: var(--ink);
+      font-family: var(--mono); font-size: 0.8rem; padding: 0.8rem 1rem; outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s; resize: vertical; border-radius: 0; -webkit-appearance: none;
+    }
+    input:focus, textarea:focus { border-color: var(--blue); box-shadow: 3px 3px 0 var(--blue); }
+    input::placeholder, textarea::placeholder { color: var(--ink-soft); font-style: italic; }
+    textarea { min-height: 100px; }
+    .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .btn-submit { font-family: var(--display); font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; padding: 1rem 2rem; border: 3px solid var(--ink); background: var(--ink); color: var(--paper); cursor: crosshair; width: 100%; transition: background 0.15s, border-color 0.15s, box-shadow 0.15s; margin-top: 0.5rem; }
+    .btn-submit:hover { background: var(--red); border-color: var(--red); box-shadow: 4px 4px 0 var(--ink); }
+
+    .success-msg { display: none; padding: 2rem; border: 3px solid var(--ink); background: var(--paper); font-size: 0.8rem; line-height: 1.8; box-shadow: 5px 5px 0 var(--ink); }
+    .success-msg.show { display: block; }
+    .success-msg strong { font-family: var(--display); font-size: 1.1rem; display: block; margin-bottom: 0.75rem; }
+
+    /* ── FOOTER (exact v2) ── */
+    footer { display: grid; grid-template-columns: repeat(3, 1fr); border-top: var(--border); }
+    .footer-cell { padding: 1.5rem; border-right: var(--border); }
+    .footer-cell:last-child { border-right: none; }
+    .footer-cell-label { font-family: var(--label); font-size: 0.55rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--ink-soft); margin-bottom: 0.5rem; }
+    .footer-cell-val { font-family: var(--display); font-size: 0.85rem; font-weight: 700; }
+
+    /* ══════════════════════════════════════
+       PROFILE BUILDER PAGE
+    ══════════════════════════════════════ */
+    .profile-section {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      min-height: calc(100vh - 3.5rem);
+    }
+    .profile-left {
+      border-right: var(--border);
+      padding: 3rem 2.5rem;
+      overflow-y: auto;
+    }
+    .profile-right {
+      padding: 3rem 2.5rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.5rem;
+      background: var(--ink);
+      position: relative;
+      overflow-y: auto;
+    }
+    .profile-right::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+      background-size: 20px 20px;
+      pointer-events: none;
+    }
+    .profile-title { font-family: var(--display); font-size: 1.6rem; font-weight: 900; text-transform: uppercase; letter-spacing: -0.02em; margin-bottom: 0.4rem; }
+    .profile-sub { font-size: 0.72rem; color: var(--ink-mid); line-height: 1.7; margin-bottom: 1.5rem; }
+    .section-divider { border: none; border-top: var(--border); margin: 1.5rem 0; }
+    .section-heading { font-family: var(--label); font-size: 0.6rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--ink-soft); margin-bottom: 1rem; }
+
+    /* Interests */
+    .interests-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.4rem; }
+    .interest-tag {
+      font-family: var(--label); font-size: 0.55rem; letter-spacing: 0.08em; text-transform: uppercase;
+      padding: 0.45rem 0.4rem; border: 2px solid var(--ink); text-align: center;
+      cursor: crosshair; transition: background 0.12s, color 0.12s; user-select: none;
+    }
+    .interest-tag.selected { background: var(--ink); color: var(--paper); }
+
+    /* ── TRADING CARD ── */
+    .card-wrap { position: relative; z-index: 1; width: 100%; max-width: 300px; }
+    .card-preview-label { font-family: var(--label); font-size: 0.52rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--ink-soft); margin-bottom: 0.75rem; text-align: center; }
+
+    .trading-card {
+      width: 100%;
+      aspect-ratio: 2.5 / 3.5;
+      background: var(--paper);
+      border: 3px solid var(--paper);
+      position: relative;
+      overflow: hidden;
+      box-shadow: 8px 8px 0 rgba(255,255,255,0.12);
+      display: flex;
+      flex-direction: column;
+      font-family: var(--mono);
+    }
+    .card-accent-bar { height: 5px; background: var(--red); flex-shrink: 0; }
+    .card-header { background: var(--ink); border-bottom: 2px solid var(--paper); padding: 0.6rem 0.8rem; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
+    .card-logo { font-family: var(--display); font-size: 0.42rem; font-weight: 900; color: var(--paper); letter-spacing: 0.05em; text-transform: uppercase; }
+    .card-status-badge { font-family: var(--label); font-size: 0.38rem; letter-spacing: 0.12em; text-transform: uppercase; padding: 0.18rem 0.4rem; border: 1.5px solid; }
+    .badge-pending { border-color: var(--ink-soft); color: var(--ink-soft); }
+    .badge-shortlisted { border-color: #f0a500; color: #f0a500; }
+    .badge-seated { border-color: var(--green); color: var(--green); }
+    .card-body { flex: 1; padding: 0.85rem; display: flex; flex-direction: column; gap: 0.5rem; overflow: hidden; }
+    .card-name { font-family: var(--display); font-size: 1.4rem; font-weight: 900; line-height: 1; letter-spacing: -0.03em; text-transform: uppercase; }
+    .card-vibe { font-family: var(--label); font-size: 0.48rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--ink-soft); margin-top: 0.1rem; }
+    .card-divider { height: 2px; background: var(--ink); margin: 0.1rem 0; flex-shrink: 0; }
+    .card-field-label { font-family: var(--label); font-size: 0.36rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-soft); margin-bottom: 0.1rem; }
+    .card-field-val { font-size: 0.52rem; line-height: 1.4; color: var(--ink); }
+    .card-tags { display: flex; flex-wrap: wrap; gap: 0.2rem; margin-top: 0.15rem; }
+    .card-tag { font-family: var(--label); font-size: 0.36rem; letter-spacing: 0.08em; text-transform: uppercase; padding: 0.12rem 0.3rem; border: 1.5px solid var(--ink); }
+    .card-footer { background: var(--ink); border-top: 2px solid var(--paper); padding: 0.45rem 0.8rem; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
+    .card-footer-left { font-family: var(--label); font-size: 0.36rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-soft); }
+    .card-footer-num { font-family: var(--display); font-size: 0.65rem; font-weight: 900; color: var(--paper); }
+
+    /* Card actions */
+    .card-actions { display: flex; gap: 0.6rem; width: 100%; max-width: 300px; position: relative; z-index: 1; }
+    .card-btn { flex: 1; font-family: var(--label); font-size: 0.52rem; letter-spacing: 0.1em; text-transform: uppercase; padding: 0.65rem; border: 2px solid var(--paper); color: var(--paper); background: transparent; cursor: crosshair; text-align: center; transition: background 0.15s, color 0.15s; }
+    .card-btn:hover { background: var(--paper); color: var(--ink); }
+    .card-btn.primary { background: var(--paper); color: var(--ink); }
+    .card-btn.primary:hover { background: transparent; color: var(--paper); }
+
+    /* Pending info */
+    .pending-box { position: relative; z-index: 1; width: 100%; max-width: 300px; border: 2px solid rgba(255,255,255,0.15); padding: 1rem; }
+    .pending-box-label { font-family: var(--label); font-size: 0.48rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--ink-soft); margin-bottom: 0.75rem; }
+    .pending-box-item { display: flex; justify-content: space-between; align-items: flex-start; padding: 0.45rem 0; border-top: 1px solid rgba(255,255,255,0.08); }
+    .pending-box-item-label { font-family: var(--label); font-size: 0.44rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-soft); }
+    .pending-box-item-val { font-size: 0.54rem; color: var(--paper); text-align: right; max-width: 58%; line-height: 1.4; }
+
+    /* ══════════════════════════════════════
+       CONFIRMED PAGE
+    ══════════════════════════════════════ */
+    .confirm-section {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      min-height: calc(100vh - 3.5rem);
+      border-bottom: var(--border);
+    }
+    .confirm-left {
+      border-right: var(--border);
+      padding: 3rem 2.5rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 1.5rem;
+    }
+    .confirm-right {
+      padding: 3rem 2.5rem;
+      background: var(--blue-pale);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1.5rem;
+    }
+    .confirm-heading { font-family: var(--display); font-size: clamp(2rem, 4vw, 3.5rem); font-weight: 900; line-height: 0.95; text-transform: uppercase; letter-spacing: -0.02em; }
+    .confirm-heading span { color: var(--red); }
+
+    /* ── ANIMATIONS ── */
+    @keyframes pop {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .reveal { opacity: 0; transform: translateY(16px); transition: opacity 0.6s ease, transform 0.6s ease; }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 768px) {
+      .hero, .form-section, .profile-section, .confirm-section { grid-template-columns: 1fr; }
+      .hero-right { min-height: 40vh; }
+      .grid-section { grid-template-columns: 1fr; }
+      .grid-sidebar { border-right: none; border-bottom: var(--border); }
+      .blocks-grid { grid-template-columns: 1fr; }
+      .form-left, .profile-left, .confirm-left { border-right: none; border-bottom: var(--border); }
+      footer { grid-template-columns: 1fr; }
+      .footer-cell { border-right: none; border-bottom: var(--border); }
+      .interests-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <span class="nav-logo">The Other Table</span>
+    <span class="nav-tag">South Florida · 2026</span>
+  </nav>
+
+  <main>
+
+    <!-- ══════════════════════════════════
+         PAGE 1 — LANDING (v2 exact)
+    ══════════════════════════════════ -->
+    <div class="page active" id="page-landing">
+
+      <section class="hero">
+        <div class="hero-left">
+          <div>
+            <div class="tag-row">
+              <span class="tag">Ages 12–13</span>
+              <span class="tag red">12 Seats</span>
+              <span class="tag blue">South Florida</span>
+            </div>
+            <h1 class="hero-title">
+              The<br>
+              <span class="line-red">Other</span>
+              <span class="line-blue">Table</span>
+            </h1>
+          </div>
+          <p class="hero-desc">
+            A thinking circle for 12-year-olds who question things, feel things deeply,
+            and want somewhere real to put it.<br><br>
+            Not a class. Not a club. Not a résumé line.
+          </p>
+        </div>
+        <div class="hero-right">
+          <div class="seat-counter">
+            <span class="seat-num">12</span>
+            <p class="seat-label">Seats available</p>
+          </div>
+          <div class="hero-cta">
+            <a href="#" class="btn" onclick="goTo('page-apply'); return false;">I want in <span class="arrow">↓</span></a>
+          </div>
+        </div>
+      </section>
+
+      <section class="grid-section reveal">
+        <div class="grid-sidebar">
+          <p class="sidebar-label">Index</p>
+          <div class="sidebar-items">
+            <div class="sidebar-item active">What this is</div>
+            <div class="sidebar-item">What this isn't</div>
+            <div class="sidebar-item">Who's here</div>
+            <div class="sidebar-item">How it works</div>
+          </div>
+        </div>
+        <div class="grid-content">
+          <div class="grid-content-label">
+            <span>Blocks — 3</span>
+            <span>Updated Feb 2026</span>
+          </div>
+          <div class="blocks-grid">
+            <div class="block accent-red">
+              <p class="block-index">01 — Big questions</p>
+              <h3 class="block-title">Every session opens with one question that has no right answer.</h3>
+              <p class="block-body">You talk. You disagree. You change your mind — or you don't. No grading. No moralizing. Just the room.</p>
+            </div>
+            <div class="block">
+              <p class="block-index">02 — Real talk</p>
+              <h3 class="block-title">Twenty minutes where you can say the thing you can't say anywhere else.</h3>
+              <p class="block-body">No fixing. No judgment. No screenshots. Just people actually listening for once.</p>
+            </div>
+            <div class="block accent-blue">
+              <p class="block-index">03 — Long game</p>
+              <h3 class="block-title">Same group, start to senior year.</h3>
+              <p class="block-body">By 18 you won't just know each other. You'll understand each other. That kind of thing doesn't happen by accident.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div class="mystery-strip">
+        <div class="mystery-strip-inner">
+          <span class="mystery-text">You already know if this is for you <span class="mystery-dot">✦</span> You already know if this is for you <span class="mystery-dot">✦</span> You already know if this is for you <span class="mystery-dot">✦</span> You already know if this is for you <span class="mystery-dot">✦</span> You already know if this is for you <span class="mystery-dot">✦</span></span>
+          <span class="mystery-text" aria-hidden="true">You already know if this is for you <span class="mystery-dot">✦</span> You already know if this is for you <span class="mystery-dot">✦</span> You already know if this is for you <span class="mystery-dot">✦</span> You already know if this is for you <span class="mystery-dot">✦</span> You already know if this is for you <span class="mystery-dot">✦</span></span>
+        </div>
+      </div>
+
+      <section class="form-section" id="apply">
+        <div class="form-left reveal">
+          <div>
+            <h2 class="form-heading">Apply.<br>No essays.<br>Just you.</h2>
+          </div>
+          <p class="form-subtext">
+            Fill this out yourself. Not your parents — you.
+            There are no wrong answers. We're looking for curious, not perfect.
+            We read every single one.
+          </p>
+          <div class="form-rules">
+            <p class="rule">South Florida only</p>
+            <p class="rule">Ages 12–13</p>
+            <p class="rule">12 seats. That's it.</p>
+          </div>
+        </div>
+        <div class="form-right reveal">
+          <form id="application-form">
+            <div class="field-row">
+              <div class="field">
+                <label for="f-name">First name</label>
+                <input type="text" id="f-name" placeholder="Just your first" required />
+              </div>
+              <div class="field">
+                <label for="f-age">Age</label>
+                <input type="number" id="f-age" placeholder="12 or 13" min="12" max="13" required />
+              </div>
+            </div>
+            <div class="field-row">
+              <div class="field">
+                <label for="f-city">Where in South Florida?</label>
+                <input type="text" id="f-city" placeholder="City or area" required />
+              </div>
+              <div class="field">
+                <label for="f-email">Email (parent's is fine)</label>
+                <input type="email" id="f-email" placeholder="so we can reach you" required />
+              </div>
+            </div>
+            <div class="field">
+              <label for="f-q1">Question 01</label>
+              <p class="field-q">What's one thing about the world that doesn't make sense to you?</p>
+              <textarea id="f-q1" placeholder="Could be big. Could be small. Whatever's actually in your head." required></textarea>
+            </div>
+            <div class="field">
+              <label for="f-q2">Question 02</label>
+              <p class="field-q">What do you think about that most people your age don't?</p>
+              <textarea id="f-q2" placeholder="Not what you think you're supposed to say. The real thing." required></textarea>
+            </div>
+            <div class="field">
+              <label for="f-q3">Question 03</label>
+              <p class="field-q">Why do you want a seat?</p>
+              <textarea id="f-q3" placeholder="This one matters most." required></textarea>
+            </div>
+            <button type="submit" class="btn-submit">Next — Build your profile →</button>
+          </form>
+        </div>
+      </section>
+
+      <footer>
+        <div class="footer-cell"><p class="footer-cell-label">Program</p><p class="footer-cell-val">The Other Table</p></div>
+        <div class="footer-cell"><p class="footer-cell-label">Location</p><p class="footer-cell-val">South Florida</p></div>
+        <div class="footer-cell"><p class="footer-cell-label">First cohort</p><p class="footer-cell-val">2026</p></div>
+      </footer>
+    </div>
+
+    <!-- ══════════════════════════════════
+         PAGE 2 — PROFILE BUILDER
+    ══════════════════════════════════ -->
+    <div class="page" id="page-profile">
+      <section class="profile-section">
+        <div class="profile-left">
+          <h2 class="profile-title">Your profile</h2>
+          <p class="profile-sub">Almost done. A few more things so people know who's coming to the table.</p>
+
+          <div class="field">
+            <label for="p-vibe">Vibe word</label>
+            <p class="field-q">One word that describes you right now.</p>
+            <input type="text" id="p-vibe" placeholder="e.g. restless, curious, loud, soft..." maxlength="20" oninput="updateCard()" />
+          </div>
+
+          <div class="field">
+            <label for="p-thinking">Currently thinking about</label>
+            <p class="field-q">One sentence. Whatever's living in your head this week.</p>
+            <input type="text" id="p-thinking" placeholder="e.g. why adults stop asking questions" oninput="updateCard()" />
+          </div>
+
+          <div class="field">
+            <label for="p-question">Favorite question you've ever been asked</label>
+            <input type="text" id="p-question" placeholder="Write it out" oninput="updateCard()" />
+          </div>
+
+          <div class="field">
+            <label for="p-proud">Something you made or are proud of</label>
+            <input type="text" id="p-proud" placeholder="Could be anything" oninput="updateCard()" />
+          </div>
+
+          <hr class="section-divider" />
+          <p class="section-heading">What are you into? (pick up to 6)</p>
+          <div class="interests-grid" id="interests-grid"></div>
+
+          <hr class="section-divider" />
+          <button class="btn-submit" onclick="goTo('page-confirm')">Looks good — I'm in →</button>
+        </div>
+
+        <div class="profile-right">
+          <p class="card-preview-label">Live preview — your card</p>
+
+          <div class="card-wrap">
+            <div class="trading-card" id="trading-card">
+              <div class="card-accent-bar"></div>
+              <div class="card-header">
+                <span class="card-logo">The Other Table</span>
+                <span class="card-status-badge badge-pending">Pending · Cohort 01</span>
+              </div>
+              <div class="card-body">
+                <div>
+                  <div class="card-name" id="card-name">—</div>
+                  <div class="card-vibe" id="card-vibe">VIBE WORD</div>
+                </div>
+                <div class="card-divider"></div>
+                <div>
+                  <div class="card-field-label">Currently thinking about</div>
+                  <div class="card-field-val" id="card-thinking">—</div>
+                </div>
+                <div>
+                  <div class="card-field-label">Favorite question ever asked</div>
+                  <div class="card-field-val" id="card-question">—</div>
+                </div>
+                <div>
+                  <div class="card-field-label">Something I'm proud of</div>
+                  <div class="card-field-val" id="card-proud">—</div>
+                </div>
+                <div>
+                  <div class="card-field-label">Into</div>
+                  <div class="card-tags" id="card-tags"></div>
+                </div>
+              </div>
+              <div class="card-footer">
+                <div>
+                  <div class="card-footer-left">South Florida</div>
+                  <div class="card-footer-left" id="card-city-footer">—</div>
+                </div>
+                <div class="card-footer-num" id="card-num">#—</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card-actions">
+            <div class="card-btn" onclick="alert('Available after confirmation!')">↓ Save card</div>
+            <div class="card-btn primary" onclick="alert('Available after confirmation!')">⟳ Share link</div>
+          </div>
+
+          <div class="pending-box">
+            <p class="pending-box-label">What happens next</p>
+            <div class="pending-box-item">
+              <span class="pending-box-item-label">Step 1</span>
+              <span class="pending-box-item-val">We read your application</span>
+            </div>
+            <div class="pending-box-item">
+              <span class="pending-box-item-label">Step 2</span>
+              <span class="pending-box-item-val">45-person Zoom — all applicants</span>
+            </div>
+            <div class="pending-box-item">
+              <span class="pending-box-item-label">Step 3</span>
+              <span class="pending-box-item-val">Final 12 selected · you'll know</span>
+            </div>
+            <div class="pending-box-item">
+              <span class="pending-box-item-label">Timeline</span>
+              <span class="pending-box-item-val" style="color:var(--ink-soft);">Email 48hrs before the call</span>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- ══════════════════════════════════
+         PAGE 3 — CONFIRMED
+    ══════════════════════════════════ -->
+    <div class="page" id="page-confirm">
+      <section class="confirm-section">
+        <div class="confirm-left">
+          <div class="tag-row" style="opacity:1;animation:none;">
+            <span class="tag red">Application received</span>
+          </div>
+          <h2 class="confirm-heading">You're<br>at the<br><span>door.</span></h2>
+          <p class="form-subtext">
+            We got it. We read every one ourselves — no algorithm, no filter.<br><br>
+            You'll get an email <strong>48 hours before</strong> the Zoom call with everything you need.<br><br>
+            Drop your card anywhere. Let people wonder.
+          </p>
+          <div class="form-rules">
+            <p class="rule">Check your email</p>
+            <p class="rule">Show up to the Zoom call</p>
+            <p class="rule">Be yourself — that's the whole thing</p>
+          </div>
+        </div>
+        <div class="confirm-right">
+          <div class="card-wrap">
+            <div class="trading-card" id="confirm-card"></div>
+          </div>
+          <div class="card-actions" style="max-width:300px;">
+            <div class="card-btn" style="border-color:var(--ink);color:var(--ink);" onclick="alert('Downloads your card PNG!')">↓ Save card</div>
+            <div class="card-btn primary" style="border-color:var(--ink);color:var(--ink);background:var(--ink-mid);" onclick="alert('Copies your profile link!')">⟳ Copy link</div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+  </main>
+
+  <script>
+    const state = {
+      name: '', city: '',
+      vibe: '', thinking: '', question: '', proud: '',
+      interests: [],
+      cardNum: Math.floor(Math.random() * 899) + 100
+    };
+
+    const INTERESTS = ['Music','Art','Gaming','Sports','Writing','Film','Tech','Fashion','Science','Food','Nature','Reading','Dance','Design','Comedy','Math'];
+
+    function goTo(pageId) {
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.getElementById(pageId).classList.add('active');
+      window.scrollTo(0, 0);
+      if (pageId === 'page-profile') { buildInterestGrid(); updateCard(); }
+      if (pageId === 'page-confirm') renderConfirmCard();
+    }
+
+    document.getElementById('application-form').addEventListener('submit', function(e) {
+      e.preventDefault();
+      state.name = document.getElementById('f-name').value;
+      state.city = document.getElementById('f-city').value;
+      document.getElementById('card-name').textContent = state.name || '—';
+      document.getElementById('card-city-footer').textContent = state.city || '—';
+      document.getElementById('card-num').textContent = '#' + state.cardNum;
+      goTo('page-profile');
+    });
+
+    function buildInterestGrid() {
+      const grid = document.getElementById('interests-grid');
+      grid.innerHTML = '';
+      INTERESTS.forEach(interest => {
+        const el = document.createElement('div');
+        el.className = 'interest-tag' + (state.interests.includes(interest) ? ' selected' : '');
+        el.textContent = interest;
+        el.onclick = () => {
+          if (state.interests.includes(interest)) {
+            state.interests = state.interests.filter(i => i !== interest);
+            el.classList.remove('selected');
+          } else if (state.interests.length < 6) {
+            state.interests.push(interest);
+            el.classList.add('selected');
+          }
+          updateCard();
+        };
+        grid.appendChild(el);
+      });
+    }
+
+    function updateCard() {
+      state.vibe     = document.getElementById('p-vibe').value;
+      state.thinking = document.getElementById('p-thinking').value;
+      state.question = document.getElementById('p-question').value;
+      state.proud    = document.getElementById('p-proud').value;
+
+      document.getElementById('card-name').textContent     = state.name || '—';
+      document.getElementById('card-vibe').textContent     = state.vibe ? state.vibe.toUpperCase() : 'VIBE WORD';
+      document.getElementById('card-thinking').textContent = state.thinking || '—';
+      document.getElementById('card-question').textContent = state.question || '—';
+      document.getElementById('card-proud').textContent    = state.proud || '—';
+      document.getElementById('card-city-footer').textContent = state.city || '—';
+      document.getElementById('card-num').textContent      = '#' + state.cardNum;
+
+      const tagsEl = document.getElementById('card-tags');
+      tagsEl.innerHTML = '';
+      state.interests.forEach(t => {
+        const tag = document.createElement('span');
+        tag.className = 'card-tag';
+        tag.textContent = t;
+        tagsEl.appendChild(tag);
+      });
+    }
+
+    function renderConfirmCard() {
+      const card = document.getElementById('confirm-card');
+      const tagsHTML = state.interests.map(t => `<span class="card-tag">${t}</span>`).join('');
+      card.innerHTML = `
+        <div class="card-accent-bar"></div>
+        <div class="card-header">
+          <span class="card-logo">The Other Table</span>
+          <span class="card-status-badge badge-pending">Pending · Cohort 01</span>
+        </div>
+        <div class="card-body">
+          <div>
+            <div class="card-name">${state.name || '—'}</div>
+            <div class="card-vibe">${state.vibe ? state.vibe.toUpperCase() : '—'}</div>
+          </div>
+          <div class="card-divider"></div>
+          <div><div class="card-field-label">Currently thinking about</div><div class="card-field-val">${state.thinking || '—'}</div></div>
+          <div><div class="card-field-label">Favorite question ever asked</div><div class="card-field-val">${state.question || '—'}</div></div>
+          <div><div class="card-field-label">Something I'm proud of</div><div class="card-field-val">${state.proud || '—'}</div></div>
+          <div><div class="card-field-label">Into</div><div class="card-tags">${tagsHTML || '<span style="color:var(--ink-soft);font-size:0.5rem">—</span>'}</div></div>
+        </div>
+        <div class="card-footer">
+          <div><div class="card-footer-left">South Florida</div><div class="card-footer-left">${state.city || '—'}</div></div>
+          <div class="card-footer-num">#${state.cardNum}</div>
+        </div>`;
+    }
+
+    // Scroll reveal
+    const obs = new IntersectionObserver(entries => {
+      entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target); } });
+    }, { threshold: 0.08 });
+    document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+
+    // Sidebar
+    document.querySelectorAll('.sidebar-item').forEach(item => {
+      item.addEventListener('click', function() {
+        document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
+        this.classList.add('active');
+      });
+    });
+  </script>
+</body>
+</html>
